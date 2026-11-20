@@ -9,7 +9,7 @@ const PROJECTS = [
       "A capstone project featuring a dual-bin system that composts organic waste aerobically in one bin and anaerobically in the other, producing fertilizer and biogas. Through a microcontroller and a sensor network, it monitors temperature, moisture, pH, and gas levels in real time.",
     role: "Design and Documentation",
     timeline: "Aug 2025 - Nov 2026",
-    status: "In progress",
+    status: "Completed",
     features: [
       "Aerobic bin with automated tumbling for aeration and mixing",
       "Airtight anaerobic bin with biogas collection and filtration",

@@ -1,7 +1,7 @@
 const PROJECTS = [
   {
     counter: "PROJECT 01 / 04",
-    title: "Smart Composting System",
+    title: "CompostSync",
     subtitle: "SMART DUAL-BIN AEROBIC–ANAEROBIC COMPOSTING SYSTEM",
     image: "assets/project-compost-thesis.jpg",
     imageAlt: "Smart Dual-Bin Aerobic-Anaerobic Composting System thesis manuscript",

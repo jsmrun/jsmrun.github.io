@@ -1113,3 +1113,7 @@ a {
     padding: 1.25rem;
   }
 }
+
+[hidden] {
+  display: none !important;
+}

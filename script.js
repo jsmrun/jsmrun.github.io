@@ -16,7 +16,9 @@ const PROJECTS = [
       "Real-time sensing: temperature, moisture, pH, methane, ammonia",
       "Documented in a full thesis manuscript"
     ],
-    stack: ["Microcontroller", "Sensors", "Embedded C++"]
+    stack: ["Microcontroller", "Sensors", "Embedded C++"],
+    link: "",
+    linkLabel: ""
   },
   {
     counter: "PROJECT 02 / 04",
@@ -35,7 +37,9 @@ const PROJECTS = [
       "Daily spend pace, balance privacy masking, and cross-filtering",
       "Thermal POS-style receipt generation"
     ],
-    stack: ["JavaScript", "Tailwind CSS", "Supabase", "PostgreSQL", "Capacitor"]
+    stack: ["JavaScript", "Tailwind CSS", "Supabase", "PostgreSQL", "Capacitor"],
+    link: "",
+    linkLabel: ""
   },
   {
     counter: "PROJECT 03 / 04",
@@ -54,7 +58,9 @@ const PROJECTS = [
       "Automated three-day trash cleanup and multi-format date parsing",
       "Data persistence through GitHub REST API sync"
     ],
-    stack: ["Python", "Streamlit", "Git"]
+    stack: ["Python", "Streamlit", "Git"],
+    link: "",
+    linkLabel: ""
   },
   {
     counter: "PROJECT 04 / 04",
@@ -73,7 +79,9 @@ const PROJECTS = [
       "Product details page with an add-to-bag option",
       "About Us page, and a contact page with form and inquiries"
     ],
-    stack: ["Figma", "Wireframing", "Prototyping", "UI Design"]
+    stack: ["Figma", "Wireframing", "Prototyping", "UI Design"],
+    link: "https://www.figma.com/proto/FnSsIhZOqXiRHvLSh2Hdw1?node-id=0-1&t=hTyNUlgg3LKW7phx-6",
+    linkLabel: "OPEN IN FIGMA ↗"
   }
 ];
 
@@ -133,8 +141,9 @@ filterBtns.forEach((btn) => {
 // Project Case Study Modal
 const modal = document.getElementById("projectModal");
 const modalClose = document.getElementById("modalClose");
-const modalBackBtn = document.getElementById("modalBackBtn");
+const modalPrevBtn = document.getElementById("modalPrevBtn");
 const modalNextBtn = document.getElementById("modalNextBtn");
+const modalExternalBtn = document.getElementById("modalExternalBtn");
 let currentProjectIndex = 0;
 
 function renderProjectModal(index) {
@@ -166,6 +175,14 @@ function renderProjectModal(index) {
     span.textContent = tech;
     stackWrap.appendChild(span);
   });
+
+  if (p.link) {
+    modalExternalBtn.href = p.link;
+    modalExternalBtn.textContent = p.linkLabel || "OPEN PROJECT ↗";
+    modalExternalBtn.hidden = false;
+  } else {
+    modalExternalBtn.hidden = true;
+  }
 }
 
 function openModal(index) {
@@ -189,7 +206,9 @@ projectCards.forEach((card) => {
 });
 
 modalClose.addEventListener("click", closeModal);
-modalBackBtn.addEventListener("click", closeModal);
+modalPrevBtn.addEventListener("click", () => {
+  renderProjectModal(currentProjectIndex - 1);
+});
 modalNextBtn.addEventListener("click", () => {
   renderProjectModal(currentProjectIndex + 1);
 });

@@ -380,3 +380,11 @@ if (dotCanvas) {
   buildDotGrid();
   animateDots();
 }
+
+// Smooth scroll to top for any #top link
+document.querySelectorAll('a[href="#top"]').forEach((link) => {
+  link.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+});

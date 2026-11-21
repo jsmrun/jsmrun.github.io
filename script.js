@@ -240,3 +240,126 @@ document.querySelectorAll(".copy-btn").forEach((btn) => {
     }
   });
 });
+
+// Interactive Cursor-Reactive Dot Grid (Hero Section)
+const dotCanvas = document.getElementById("heroDotCanvas");
+
+if (dotCanvas) {
+  const ctx = dotCanvas.getContext("2d");
+  const GRID_COUNT = 13;
+  const INFLUENCE_RADIUS = 115;
+  const MAX_PULL = 14;
+
+  let width = 0;
+  let height = 0;
+  let dots = [];
+  const pointer = { x: -9999, y: -9999, active: false };
+
+  function buildDotGrid() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = dotCanvas.getBoundingClientRect();
+    width = rect.width;
+    height = rect.height;
+
+    dotCanvas.width = width * dpr;
+    dotCanvas.height = height * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    dots = [];
+    const padding = 34;
+    const stepX = (width - padding * 2) / (GRID_COUNT - 1);
+    const stepY = (height - padding * 2) / (GRID_COUNT - 1);
+
+    for (let row = 0; row < GRID_COUNT; row++) {
+      for (let col = 0; col < GRID_COUNT; col++) {
+        const baseX = padding + col * stepX;
+        const baseY = padding + row * stepY;
+        const isTerracotta = (row + col) % 3 === 0;
+        dots.push({
+          baseX,
+          baseY,
+          x: baseX,
+          y: baseY,
+          radius: 2.4,
+          isTerracotta
+        });
+      }
+    }
+  }
+
+  function animateDots() {
+    ctx.clearRect(0, 0, width, height);
+
+    for (const dot of dots) {
+      const dx = pointer.x - dot.baseX;
+      const dy = pointer.y - dot.baseY;
+      const dist = Math.hypot(dx, dy);
+
+      let targetX = dot.baseX;
+      let targetY = dot.baseY;
+      let targetRadius = 2.4;
+      let proximity = 0;
+
+      if (pointer.active && dist < INFLUENCE_RADIUS) {
+        proximity = 1 - dist / INFLUENCE_RADIUS;
+        const ease = proximity * proximity;
+        const angle = Math.atan2(dy, dx);
+        targetX = dot.baseX + Math.cos(angle) * MAX_PULL * ease;
+        targetY = dot.baseY + Math.sin(angle) * MAX_PULL * ease;
+        targetRadius = 2.4 + 4.4 * ease;
+      }
+
+      // Smooth spring interpolation
+      dot.x += (targetX - dot.x) * 0.16;
+      dot.y += (targetY - dot.y) * 0.16;
+      dot.radius += (targetRadius - dot.radius) * 0.18;
+
+      ctx.beginPath();
+      ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+
+      if (proximity > 0.12) {
+        ctx.fillStyle = dot.isTerracotta
+          ? `rgba(194, 73, 29, ${0.45 + proximity * 0.55})`
+          : `rgba(122, 152, 128, ${0.45 + proximity * 0.55})`;
+      } else {
+        ctx.fillStyle = "rgba(158, 179, 162, 0.45)";
+      }
+
+      ctx.fill();
+    }
+
+    requestAnimationFrame(animateDots);
+  }
+
+  dotCanvas.addEventListener("mousemove", (e) => {
+    const rect = dotCanvas.getBoundingClientRect();
+    pointer.x = e.clientX - rect.left;
+    pointer.y = e.clientY - rect.top;
+    pointer.active = true;
+  });
+
+  dotCanvas.addEventListener("mouseleave", () => {
+    pointer.active = false;
+  });
+
+  // Touch support for mobile devices
+  dotCanvas.addEventListener(
+    "touchmove",
+    (e) => {
+      if (!e.touches.length) return;
+      const rect = dotCanvas.getBoundingClientRect();
+      pointer.x = e.touches[0].clientX - rect.left;
+      pointer.y = e.touches[0].clientY - rect.top;
+      pointer.active = true;
+    },
+    { passive: true }
+  );
+
+  dotCanvas.addEventListener("touchend", () => {
+    pointer.active = false;
+  });
+
+  window.addEventListener("resize", buildDotGrid);
+  buildDotGrid();
+  animateDots();
+}

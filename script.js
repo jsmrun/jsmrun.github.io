@@ -69,7 +69,7 @@ const PROJECTS = [
     image: "assets/project-rovercraft.png",
     imageAlt: "RoverCraft Tech Figma wireframes and prototype screens",
     overview:
-      "A five-page mobile app wireframe and Figma prototype for RoverCraft Tech, made for students, educators, and tech enthusiasts to explore product models, learn about STEM, and send inquiries. Built with a team of four for BSCPE401.",
+      "A five-page mobile app wireframe and Figma prototype for RoverCraft Tech, made for students, educators, and tech enthusiasts to explore product models, learn about STEM, and send inquiries.",
     role: "UI/UX Design",
     timeline: "May 2025",
     status: "Completed",

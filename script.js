@@ -241,19 +241,25 @@ document.querySelectorAll(".copy-btn").forEach((btn) => {
   });
 });
 
-// Interactive Cursor-Reactive Dot Grid (Hero Section)
+// Interactive Scattered Cursor-Reactive Dot Field (Hero Section)
 const dotCanvas = document.getElementById("heroDotCanvas");
 
 if (dotCanvas) {
   const ctx = dotCanvas.getContext("2d");
-  const GRID_COUNT = 13;
-  const INFLUENCE_RADIUS = 115;
-  const MAX_PULL = 14;
+  const DOT_COUNT = 150; // Density of the irregular field
+  const INFLUENCE_RADIUS = 135;
+  const MAX_PULL = 18;
 
   let width = 0;
   let height = 0;
   let dots = [];
   const pointer = { x: -9999, y: -9999, active: false };
+
+  // Simple Seeded Random for consistent scattering on resizing
+  function seededRandom(seed) {
+    const x = Math.sin(seed++) * 10000;
+    return x - Math.floor(x);
+  }
 
   function buildDotGrid() {
     const dpr = window.devicePixelRatio || 1;
@@ -266,63 +272,77 @@ if (dotCanvas) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     dots = [];
-    const padding = 34;
-    const stepX = (width - padding * 2) / (GRID_COUNT - 1);
-    const stepY = (height - padding * 2) / (GRID_COUNT - 1);
+    let seed = 42; // Constant seed for stable irregularity
+    
+    for (let i = 0; i < DOT_COUNT; i++) {
+      // Scatter dots casually across bounds, keeping edges lighter
+      const baseX = 20 + seededRandom(seed++) * (width - 40);
+      const baseY = 20 + seededRandom(seed++) * (height - 40);
+      const isTerracotta = seededRandom(seed++) > 0.65;
+      const baseRadius = 1.2 + seededRandom(seed++) * 2.2;
 
-    for (let row = 0; row < GRID_COUNT; row++) {
-      for (let col = 0; col < GRID_COUNT; col++) {
-        const baseX = padding + col * stepX;
-        const baseY = padding + row * stepY;
-        const isTerracotta = (row + col) % 3 === 0;
-        dots.push({
-          baseX,
-          baseY,
-          x: baseX,
-          y: baseY,
-          radius: 2.4,
-          isTerracotta
-        });
-      }
+      dots.push({
+        baseX,
+        baseY,
+        x: baseX,
+        y: baseY,
+        radius: baseRadius,
+        baseRadius,
+        isTerracotta,
+        offsetPhase: seededRandom(seed++) * Math.PI * 2,
+        speed: 0.01 + seededRandom(seed++) * 0.015
+      });
     }
   }
 
   function animateDots() {
     ctx.clearRect(0, 0, width, height);
 
+    // Get timestamp for a very slow ambient float/vibe
+    const now = Date.now();
+
     for (const dot of dots) {
-      const dx = pointer.x - dot.baseX;
-      const dy = pointer.y - dot.baseY;
+      // Slow ambient organic drift
+      const ambientX = Math.sin(now * dot.speed + dot.offsetPhase) * 1.5;
+      const ambientY = Math.cos(now * dot.speed + dot.offsetPhase) * 1.5;
+      
+      const dx = pointer.x - (dot.baseX + ambientX);
+      const dy = pointer.y - (dot.baseY + ambientY);
       const dist = Math.hypot(dx, dy);
 
-      let targetX = dot.baseX;
-      let targetY = dot.baseY;
-      let targetRadius = 2.4;
+      let targetX = dot.baseX + ambientX;
+      let targetY = dot.baseY + ambientY;
+      let targetRadius = dot.baseRadius;
       let proximity = 0;
 
       if (pointer.active && dist < INFLUENCE_RADIUS) {
         proximity = 1 - dist / INFLUENCE_RADIUS;
         const ease = proximity * proximity;
         const angle = Math.atan2(dy, dx);
-        targetX = dot.baseX + Math.cos(angle) * MAX_PULL * ease;
-        targetY = dot.baseY + Math.sin(angle) * MAX_PULL * ease;
-        targetRadius = 2.4 + 4.4 * ease;
+        
+        // Gentle "pull" towards pointer (instead of push, for interactive fun)
+        targetX = (dot.baseX + ambientX) + Math.cos(angle) * MAX_PULL * ease;
+        targetY = (dot.baseY + ambientY) + Math.sin(angle) * MAX_PULL * ease;
+        targetRadius = dot.baseRadius + 4.5 * ease;
       }
 
-      // Smooth spring interpolation
-      dot.x += (targetX - dot.x) * 0.16;
-      dot.y += (targetY - dot.y) * 0.16;
-      dot.radius += (targetRadius - dot.radius) * 0.18;
+      // Physics interpolation for smooth springy response
+      dot.x += (targetX - dot.x) * 0.12;
+      dot.y += (targetY - dot.y) * 0.12;
+      dot.radius += (targetRadius - dot.radius) * 0.14;
 
       ctx.beginPath();
       ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
 
-      if (proximity > 0.12) {
+      // Fade dots into our terracotta and sage based on cursor proximity
+      if (proximity > 0.05) {
         ctx.fillStyle = dot.isTerracotta
-          ? `rgba(194, 73, 29, ${0.45 + proximity * 0.55})`
-          : `rgba(122, 152, 128, ${0.45 + proximity * 0.55})`;
+          ? `rgba(194, 73, 29, ${0.35 + proximity * 0.65})` // Terracotta
+          : `rgba(122, 152, 128, ${0.35 + proximity * 0.65})`; // Sage
       } else {
-        ctx.fillStyle = "rgba(158, 179, 162, 0.45)";
+        ctx.fillStyle = dot.isTerracotta
+          ? "rgba(194, 73, 29, 0.22)"
+          : "rgba(158, 179, 162, 0.28)"; // Faint natural rest state
       }
 
       ctx.fill();
@@ -331,6 +351,7 @@ if (dotCanvas) {
     requestAnimationFrame(animateDots);
   }
 
+  // Pointer position listeners
   dotCanvas.addEventListener("mousemove", (e) => {
     const rect = dotCanvas.getBoundingClientRect();
     pointer.x = e.clientX - rect.left;
@@ -342,18 +363,14 @@ if (dotCanvas) {
     pointer.active = false;
   });
 
-  // Touch support for mobile devices
-  dotCanvas.addEventListener(
-    "touchmove",
-    (e) => {
-      if (!e.touches.length) return;
-      const rect = dotCanvas.getBoundingClientRect();
-      pointer.x = e.touches[0].clientX - rect.left;
-      pointer.y = e.touches[0].clientY - rect.top;
-      pointer.active = true;
-    },
-    { passive: true }
-  );
+  // Native Touch
+  dotCanvas.addEventListener("touchmove", (e) => {
+    if (!e.touches.length) return;
+    const rect = dotCanvas.getBoundingClientRect();
+    pointer.x = e.touches[0].clientX - rect.left;
+    pointer.y = e.touches[0].clientY - rect.top;
+    pointer.active = true;
+  }, { passive: true });
 
   dotCanvas.addEventListener("touchend", () => {
     pointer.active = false;

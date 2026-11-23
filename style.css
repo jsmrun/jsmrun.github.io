@@ -24,6 +24,10 @@ html {
   scroll-behavior: smooth;
 }
 
+section[id] {
+  scroll-margin-top: 84px;
+}
+
 body {
   margin: 0;
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;

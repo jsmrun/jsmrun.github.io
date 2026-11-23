@@ -378,10 +378,11 @@ if (dotCanvas) {
   animateDots();
 }
 
-// Smooth scroll to top for any #top link
-document.querySelectorAll('a[href="#top"]').forEach((link) => {
+// Smooth scroll to the very top (0px) for HOME, brand mark, and Back to top
+document.querySelectorAll('a[href="#top"], a[href="#home"]').forEach((link) => {
   link.addEventListener("click", (e) => {
     e.preventDefault();
     window.scrollTo({ top: 0, behavior: "smooth" });
+    history.replaceState(null, "", "#home");
   });
 });

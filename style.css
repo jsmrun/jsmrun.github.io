@@ -168,7 +168,9 @@ a {
 
 /* Hero Section */
 .hero-section {
+  position: relative;
   padding: 4.5rem 0 5rem;
+  overflow: hidden;
 }
 
 .hero-grid {
@@ -176,6 +178,11 @@ a {
   grid-template-columns: 1.15fr 0.85fr;
   gap: 3.5rem;
   align-items: center;
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 2;
 }
 
 .eyebrow {
@@ -212,53 +219,23 @@ a {
   gap: 1rem;
 }
 
-.hero-visual {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-.dot-field-wrapper {
-  position: relative;
-  width: 100%;
-  max-width: 480px;
-  aspect-ratio: 1.1 / 1;
-  margin: 0 auto;
-  background: transparent;
-  overflow: visible;
-}
-
 #heroDotCanvas {
-  width: 100%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 55%;
   height: 100%;
   display: block;
   cursor: crosshair;
+  z-index: 1;
 }
 
-.hero-status-badge {
-  position: absolute;
-  bottom: 1rem;
-  left: 1rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--bg-cream);
-  border: 1px solid var(--border-subtle);
-  color: var(--ink-dark);
-  padding: 0.45rem 0.9rem;
-  border-radius: var(--radius-pill);
-  font-size: 0.8rem;
-  font-weight: 700;
-  box-shadow: var(--shadow-soft);
-  pointer-events: none;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #2E8B57;
-  flex-shrink: 0;
+@media (max-width: 900px) {
+  #heroDotCanvas {
+    width: 100%;
+    opacity: 0.45;
+    pointer-events: none;
+  }
 }
 
 /* Services / What I Do */

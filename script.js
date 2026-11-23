@@ -246,8 +246,8 @@ const dotCanvas = document.getElementById("heroDotCanvas");
 
 if (dotCanvas) {
   const ctx = dotCanvas.getContext("2d");
-  const DOT_COUNT = 150; // Density of the irregular field
-  const INFLUENCE_RADIUS = 135;
+  const DOT_COUNT = 260;
+  const INFLUENCE_RADIUS = 145;
   const MAX_PULL = 18;
 
   let width = 0;
@@ -255,7 +255,6 @@ if (dotCanvas) {
   let dots = [];
   const pointer = { x: -9999, y: -9999, active: false };
 
-  // Simple Seeded Random for consistent scattering on resizing
   function seededRandom(seed) {
     const x = Math.sin(seed++) * 10000;
     return x - Math.floor(x);
@@ -272,14 +271,18 @@ if (dotCanvas) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     dots = [];
-    let seed = 42; // Constant seed for stable irregularity
-    
+    let seed = 42;
+
     for (let i = 0; i < DOT_COUNT; i++) {
-      // Scatter dots casually across bounds, keeping edges lighter
-      const baseX = 20 + seededRandom(seed++) * (width - 40);
-      const baseY = 20 + seededRandom(seed++) * (height - 40);
+      // Bias slightly rightward so dots thin out naturally near the left text
+      const rx = Math.pow(seededRandom(seed++), 0.78);
+      const baseX = 16 + rx * (width - 24);
+      const baseY = 16 + seededRandom(seed++) * (height - 32);
       const isTerracotta = seededRandom(seed++) > 0.65;
-      const baseRadius = 1.2 + seededRandom(seed++) * 2.2;
+      const baseRadius = 1.3 + seededRandom(seed++) * 2.3;
+
+      // Softly fade opacity near the left boundary so there is no hard vertical cutoff
+      const edgeFade = Math.min(1, baseX / (width * 0.22));
 
       dots.push({
         baseX,
@@ -289,23 +292,21 @@ if (dotCanvas) {
         radius: baseRadius,
         baseRadius,
         isTerracotta,
+        edgeFade,
         offsetPhase: seededRandom(seed++) * Math.PI * 2,
-        speed: 0.01 + seededRandom(seed++) * 0.015
+        speed: 0.0012 + seededRandom(seed++) * 0.0015
       });
     }
   }
 
   function animateDots() {
     ctx.clearRect(0, 0, width, height);
-
-    // Get timestamp for a very slow ambient float/vibe
     const now = Date.now();
 
     for (const dot of dots) {
-      // Slow ambient organic drift
-      const ambientX = Math.sin(now * dot.speed + dot.offsetPhase) * 1.5;
-      const ambientY = Math.cos(now * dot.speed + dot.offsetPhase) * 1.5;
-      
+      const ambientX = Math.sin(now * dot.speed + dot.offsetPhase) * 2.2;
+      const ambientY = Math.cos(now * dot.speed + dot.offsetPhase) * 2.2;
+
       const dx = pointer.x - (dot.baseX + ambientX);
       const dy = pointer.y - (dot.baseY + ambientY);
       const dist = Math.hypot(dx, dy);
@@ -319,14 +320,12 @@ if (dotCanvas) {
         proximity = 1 - dist / INFLUENCE_RADIUS;
         const ease = proximity * proximity;
         const angle = Math.atan2(dy, dx);
-        
-        // Gentle "pull" towards pointer (instead of push, for interactive fun)
-        targetX = (dot.baseX + ambientX) + Math.cos(angle) * MAX_PULL * ease;
-        targetY = (dot.baseY + ambientY) + Math.sin(angle) * MAX_PULL * ease;
+
+        targetX = dot.baseX + ambientX + Math.cos(angle) * MAX_PULL * ease;
+        targetY = dot.baseY + ambientY + Math.sin(angle) * MAX_PULL * ease;
         targetRadius = dot.baseRadius + 4.5 * ease;
       }
 
-      // Physics interpolation for smooth springy response
       dot.x += (targetX - dot.x) * 0.12;
       dot.y += (targetY - dot.y) * 0.12;
       dot.radius += (targetRadius - dot.radius) * 0.14;
@@ -334,16 +333,12 @@ if (dotCanvas) {
       ctx.beginPath();
       ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
 
-      // Fade dots into our terracotta and sage based on cursor proximity
-      if (proximity > 0.05) {
-        ctx.fillStyle = dot.isTerracotta
-          ? `rgba(194, 73, 29, ${0.35 + proximity * 0.65})` // Terracotta
-          : `rgba(122, 152, 128, ${0.35 + proximity * 0.65})`; // Sage
-      } else {
-        ctx.fillStyle = dot.isTerracotta
-          ? "rgba(194, 73, 29, 0.22)"
-          : "rgba(158, 179, 162, 0.28)"; // Faint natural rest state
-      }
+      const baseAlpha = dot.isTerracotta ? 0.24 : 0.3;
+      const alpha = (baseAlpha + proximity * 0.65) * dot.edgeFade;
+
+      ctx.fillStyle = dot.isTerracotta
+        ? `rgba(194, 73, 29, ${alpha})`
+        : `rgba(122, 152, 128, ${alpha})`;
 
       ctx.fill();
     }
@@ -351,7 +346,6 @@ if (dotCanvas) {
     requestAnimationFrame(animateDots);
   }
 
-  // Pointer position listeners
   dotCanvas.addEventListener("mousemove", (e) => {
     const rect = dotCanvas.getBoundingClientRect();
     pointer.x = e.clientX - rect.left;
@@ -363,14 +357,17 @@ if (dotCanvas) {
     pointer.active = false;
   });
 
-  // Native Touch
-  dotCanvas.addEventListener("touchmove", (e) => {
-    if (!e.touches.length) return;
-    const rect = dotCanvas.getBoundingClientRect();
-    pointer.x = e.touches[0].clientX - rect.left;
-    pointer.y = e.touches[0].clientY - rect.top;
-    pointer.active = true;
-  }, { passive: true });
+  dotCanvas.addEventListener(
+    "touchmove",
+    (e) => {
+      if (!e.touches.length) return;
+      const rect = dotCanvas.getBoundingClientRect();
+      pointer.x = e.touches[0].clientX - rect.left;
+      pointer.y = e.touches[0].clientY - rect.top;
+      pointer.active = true;
+    },
+    { passive: true }
+  );
 
   dotCanvas.addEventListener("touchend", () => {
     pointer.active = false;
